@@ -58,4 +58,8 @@ Source Markdown, derived JSON, parser version, and revision continue to save ato
 
 ## Verification
 
-`npm run test:quiz` exercises compatibility, separated and structured formats, bold options, code/math/tables, optional and multi-column keys, mismatches, missing/duplicate content, unknown labels, and invalid ranges. The supplied 30-question file was also parsed directly without modification. Browser checks and screenshots are recorded in the completion report for this change.
+`npm run test:quiz` passes eight regression tests covering compatibility, separated and structured formats, bold options, code/math/tables, optional and multi-column keys, mismatches, missing/duplicate content, unknown labels, and invalid ranges. The supplied 30-question file was also parsed directly without modification. TypeScript, formatting, and the final Node 22 production build pass.
+
+Browser checks covered importing the supplied paper and template, keyboard checkbox selection, exact/partial/incorrect feedback, reveal without selections, Check becoming Next, previous-question state retention, final-question retry and focus, independent source previews, and disabled preview saving. No browser warnings/errors were recorded in the isolated test tab. The template URL was verified to serve the complete example. No real records were saved. Direct visual inspection of the quiz at mobile width remains a manual check; the narrow-layout navigation wraps its helper text above the buttons.
+
+[Desktop answer/explanation screenshot](screenshots/multiple-answer-desktop.png) uses the synthetic template.

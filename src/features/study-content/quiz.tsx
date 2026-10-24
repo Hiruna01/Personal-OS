@@ -183,7 +183,14 @@ function Question({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: reduced ? 0 : 0.18, ease: [0.2, 0, 0, 1] }}
-            onAnimationComplete={() => {
+            onAnimationComplete={(animation) => {
+              // AnimatePresence retains the old callback during exit; never focus a panel being removed.
+              if (
+                typeof animation !== "object" ||
+                !("opacity" in animation) ||
+                animation.opacity !== 1
+              )
+                return;
               if (
                 multiple &&
                 revealed &&
@@ -379,7 +386,15 @@ export function QuizReader({ quiz }: { quiz: Quiz }) {
                 if (!state.review)
                   update(question.number, { ...state, review: "checked" });
                 else if (hasNext) setActive(items[index + 1].name);
-                else update(question.number, emptyState);
+                else {
+                  update(question.number, emptyState);
+                  requestAnimationFrame(() => {
+                    document
+                      .getElementById(`${active}-prompt`)
+                      ?.closest("fieldset")
+                      ?.focus();
+                  });
+                }
               }}
             >
               {state.review

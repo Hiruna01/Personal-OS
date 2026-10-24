@@ -54,6 +54,7 @@ The seed is optional and intended only for development. Do not run `db reset` ag
 - Academic profile; semester creation/editing/status/current selection; module creation/editing/credits/lecturer details.
 - Lecture creation/editing/ordering/manual study status; multiple note links; uploaded or HTTPS thumbnail images with fallbacks.
 - Strict `campus-quiz-v1` syntax-tree parsing; file validation/preview/import; optional MCQ selection; per-question reveals; written model answers; canonical source editing/replacement/deletion and revision conflict protection.
+- Multiple-answer papers with separate answer keys and explanations, checkbox selections, Check → Next, and a separate reveal action. See [format details and template](docs/MULTIPLE-ANSWER-QUIZZES.md).
 - Ordinary Markdown tutorial, practical, essay, exam-question, and project-brief reading with GFM tables, code, and KaTeX mathematics.
 - Module exam preparation with paper/solution links, quizzes, and exam questions. Minimal project titles serve as parents for briefs.
 - Downloadable example files in `public/examples` and a Templates screen.

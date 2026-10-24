@@ -2770,9 +2770,13 @@
   }
   .quiz-navigation {
     gap: 10px;
+    flex-wrap: wrap;
   }
   .quiz-navigation-note {
-    font-size: 10px;
+    order: -1;
+    flex-basis: 100%;
+    margin-left: 0 !important;
+    font-size: 11px;
   }
 }
 
