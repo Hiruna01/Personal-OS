@@ -181,7 +181,7 @@ export function ImportDialog({
           </DialogTitle>
           <DialogDescription>
             {kind === "quiz"
-              ? "Use campus-quiz-v1 to keep questions, answers, and explanations in order."
+              ? "Upload a campus-quiz-v1 quiz or a multiple-answer paper with separate questions and detailed explanations."
               : "An ordinary Markdown document, rendered just as you wrote it."}
           </DialogDescription>
         </DialogHeader>
@@ -201,9 +201,22 @@ export function ImportDialog({
               className={buttonVariants({ variant: "ghost", size: "xs" })}
             >
               <Download data-icon="inline-start" />
-              Download template
+              {kind === "quiz" ? "Single-answer template" : "Download template"}
             </a>
           </div>
+          {kind === "quiz" && (
+            <div className="import-quiz-template">
+              <span>Select several answers, check, then continue.</span>
+              <a
+                href="/examples/quiz-multiple-response.md"
+                download
+                className={buttonVariants({ variant: "outline", size: "xs" })}
+              >
+                <Download data-icon="inline-start" />
+                Multiple-answer template
+              </a>
+            </div>
+          )}
           <div
             className={`upload-zone ${drag ? "is-dragging" : ""}`}
             onDragOver={(e) => {
@@ -321,8 +334,11 @@ export function ImportDialog({
                   <>
                     <p className="validation-success">
                       <CheckCircle2 size={16} />
-                      {preview.quiz.questions.length} questions validated ·
-                      original order preserved
+                      {preview.quiz.questions.length}{" "}
+                      {preview.quiz.questions.length === 1
+                        ? "question"
+                        : "questions"}{" "}
+                      validated · original order preserved
                     </p>
                     <QuizReader key={preview.source} quiz={preview.quiz} />
                   </>

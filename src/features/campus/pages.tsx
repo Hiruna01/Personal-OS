@@ -665,7 +665,7 @@ function LectureDetail({ data, id }: { data: ContextData; id: string }) {
           ) : (
             <EmptyState
               title="No quizzes yet"
-              description="Upload a campus-quiz-v1 Markdown file to begin."
+              description="Upload a single-answer, written, or multiple-answer Markdown quiz to begin."
               icon={FileQuestion}
             />
           )}
@@ -760,7 +760,9 @@ function DocumentPage({ data }: { data: ContextData }) {
           />
         </div>
       </div>
-      <article className="reading-surface">
+      <article
+        className={`reading-surface ${document.kind === "quiz" ? "quiz-reading-surface" : ""}`}
+      >
         <header className="reading-header">
           <div className="eyebrow">
             {document.kind === "quiz"
@@ -776,7 +778,11 @@ function DocumentPage({ data }: { data: ContextData }) {
           {document.kind === "quiz" && (
             <p>
               {document.quiz_json?.questions.length} questions <span>·</span>{" "}
-              Take your time. Reveal answers as you go.
+              {document.quiz_json?.questions.some(
+                (question) => question.type === "multiple_response",
+              )
+                ? "Select, check, and explore the explanations."
+                : "Take your time. Reveal answers as you go."}
             </p>
           )}
         </header>
@@ -938,6 +944,14 @@ function Templates() {
       kind: "campus-quiz-v1",
       description:
         "Multiple choice and written questions, with an answer and explanation for each.",
+      icon: FileQuestion,
+    },
+    {
+      file: "quiz-multiple-response",
+      title: "Multiple-answer quiz",
+      kind: "Separate questions and explanations",
+      description:
+        "Select all correct options, check your choices, then read the explanation. Matches the exam-paper layout with a separate answer key.",
       icon: FileQuestion,
     },
     {

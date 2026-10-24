@@ -86,14 +86,17 @@ export type Project = {
   created_at: string;
 };
 export type QuizOption = { label: string; markdown: string };
-export type QuizQuestion = {
+type QuizQuestionContent = {
   number: number;
-  type: "mcq" | "written";
   prompt: string;
-  options?: QuizOption[];
-  answer: string;
   explanation: string;
 };
+export type QuizQuestion = QuizQuestionContent &
+  (
+    | { type: "mcq"; options: QuizOption[]; answer: string }
+    | { type: "written"; options?: never; answer: string }
+    | { type: "multiple_response"; options: QuizOption[]; answer: string[] }
+  );
 export type Quiz = { title: string; questions: QuizQuestion[] };
 export type StudyDocument = {
   id: string;

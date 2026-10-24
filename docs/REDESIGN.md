@@ -35,6 +35,19 @@ Desktop and mobile visual review covered the semester and Campus compositions, e
 
 ## Verification
 
+### Questionnaire quiz reader — 19 October 2026
+
+The quiz reader now uses the official [shadcn Base Questionnaire](https://ui.shadcn.com/docs/components/base/questionnaire) composition and `@shadcn/react` 0.3.1. Shared wrappers are customised to the existing neutral design system.
+
+- One question at a time, a position indicator, native radio choices, and Previous/Next controls. Navigation never requires a selection or written response. There is no submission, score, timer, or attempt record.
+- Show answer immediately reveals the correct choice or model answer and its explanation beneath the current question. Selections and reveals survive navigation between questions and reset on reload. Reader and import-preview instances remain independent.
+- Rich Markdown, mathematics, links, tables, and code remain supported in prompts, options, answers, and explanations. Long code and tables scroll within their own containers, including narrow upload previews.
+- Keyboard radio selection, navigation focus, accessible question/answer labels, selected/focus/hover states, and reduced-motion answer expansion are retained. Single-question imports omit unnecessary navigation.
+- Browser review covered desktop and 360px mobile layouts, unanswered navigation, MCQ and written reveals, keyboard selection, navigation state retention, reload reset, source-preview isolation, and rich Markdown overflow. Synthetic preview content only; no records were saved.
+- TypeScript, formatting, and the Node 22 production build passed. Concurrent development/build output briefly produced a stale development chunk; restarting the development server and reloading restored the reader, with no new browser errors during the final review.
+
+Authentication, parser behavior, canonical Markdown/derived JSON, persistence, revisions, and permissions are unchanged.
+
 ### Lecture chapter cards
 
 Module lectures now use outlined [shadcn Base Items](https://ui.shadcn.com/docs/components/base/item), composed with ItemMedia, ItemContent, ItemTitle, ItemDescription, and ItemActions. Individual cards replace the table container and column headings.
@@ -82,6 +95,9 @@ This work changes presentation and local interactions. Database schema, owner pr
 ## Screenshots
 
 All content shown is synthetic.
+
+- [Questionnaire quiz reader — desktop](screenshots/questionnaire-desktop.png)
+- [Questionnaire quiz reader — mobile](screenshots/questionnaire-mobile.png)
 
 - [Lecture chapter cards — desktop](screenshots/lecture-chapters-desktop.png)
 - [Lecture chapter cards — mobile](screenshots/lecture-chapters-mobile.png)

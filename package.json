@@ -7,6 +7,7 @@
     "build": "next build --webpack",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
+    "test:quiz": "node --experimental-strip-types --test scripts/quiz-parser.test.mjs",
     "provision": "node --env-file=.env.local scripts/provision-owner.mjs",
     "format": "prettier --write src scripts next.config.ts",
     "seed:generate": "node --experimental-strip-types scripts/generate-seed.mjs"
@@ -16,6 +17,7 @@
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
+    "@shadcn/react": "0.3.1",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.118.0",
     "@tailwindcss/postcss": "4.3.3",

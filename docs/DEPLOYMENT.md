@@ -2,6 +2,8 @@
 
 This guide is for the first production deployment. The app's code builds locally; no hosted projects have been created or configured yet. The `/preview` workspace uses synthetic fixtures and is always unavailable in production. Your real workspace starts empty.
 
+Readiness checks on 18 October 2026: TypeScript and formatting passed, and the production Webpack build passed using Node 22. The Vercel configuration and lockfile use the same runtime target. Hosted database, Auth, email, and storage checks remain pending project setup.
+
 ## 1. Create the Supabase project
 
 Open [Supabase](https://supabase.com/dashboard) and create a dedicated project in your organisation, named **Personal OS**. Choose an available region close to you and create/store its database password yourself. Wait for the project to finish provisioning.
