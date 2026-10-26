@@ -6,13 +6,14 @@ import remarkStringify from "remark-stringify";
 import { visit } from "unist-util-visit";
 import type { Root, RootContent, List, ListItem, Text, Paragraph } from "mdast";
 import type { Quiz, QuizOption } from "@/types/domain";
-export const PARSER_VERSION = "campus-quiz-v1.1.0";
+export const PARSER_VERSION = "campus-quiz-v1.1.1";
 export const MAX_MARKDOWN_BYTES = 1048576;
 const processor = unified()
   .use(remarkParse)
   .use(remarkGfm)
   .use(remarkMath)
   .use(remarkStringify, { bullet: "-", fences: true });
+const paperQuestionsHeading = /^Questions(?:\s+\d+\s*[-–—]\s*\d+)?$/i;
 function inline(node: unknown): string {
   const n = node as { value?: string; children?: unknown[] };
   return n.value ?? n.children?.map(inline).join("") ?? "";
@@ -161,7 +162,7 @@ function parseAnswerLabels(
 // Boundaries come from the Markdown tree, so fenced code and nested content stay intact.
 function parseMultipleResponsePaper(tree: Root): Quiz {
   const nodes = tree.children;
-  function section(pattern: RegExp, label: string, required = true) {
+  function sections(pattern: RegExp) {
     const starts = nodes.flatMap((node, index) =>
       node.type === "heading" &&
       node.depth === 2 &&
@@ -169,23 +170,41 @@ function parseMultipleResponsePaper(tree: Root): Quiz {
         ? [index]
         : [],
     );
-    if (starts.length !== 1) {
-      if (!required && !starts.length) return null;
-      throw new ImportError(`Use exactly one ## ${label} section.`);
-    }
-    const start = starts[0];
-    let end = start + 1;
-    while (
-      end < nodes.length &&
-      !(
-        nodes[end].type === "heading" &&
-        (nodes[end] as { depth: number }).depth <= 2
+    return starts.map((start) => {
+      let end = start + 1;
+      while (
+        end < nodes.length &&
+        !(
+          nodes[end].type === "heading" &&
+          (nodes[end] as { depth: number }).depth <= 2
+        )
       )
-    )
-      end++;
-    return { heading: nodes[start], nodes: nodes.slice(start + 1, end) };
+        end++;
+      return { heading: nodes[start], nodes: nodes.slice(start + 1, end) };
+    });
   }
-  const questions = section(/^Questions(?:\s+1\s*[-–]\s*\d+)?$/i, "Questions")!;
+  function section(pattern: RegExp, label: string, required = true) {
+    const matches = sections(pattern);
+    if (!required && !matches.length) return null;
+    if (matches.length !== 1)
+      throw new ImportError(`Use exactly one ## ${label} section.`);
+    return matches[0];
+  }
+  const questionGroups = sections(paperQuestionsHeading);
+  if (!questionGroups.length)
+    throw new ImportError(
+      "Add a ## Questions section, optionally split into numbered ranges such as Questions 1-2 and Questions 3-4.",
+    );
+  if (
+    questionGroups.length > 1 &&
+    questionGroups.some((group) =>
+      /^Questions$/i.test(inline(group.heading).trim()),
+    )
+  )
+    throw new ImportError(
+      "When splitting questions into sections, give each section a numbered range such as ## Questions 1-2.",
+    );
+  const questions = { nodes: questionGroups.flatMap((group) => group.nodes) };
   const explanations = section(
     /^Detailed explanations$/i,
     "Detailed explanations",
@@ -283,14 +302,30 @@ function parseMultipleResponsePaper(tree: Root): Quiz {
   }
   if (!quiz.questions.length)
     throw new ImportError("Add at least one ### Question 1 section.");
-  const range = /^Questions\s+1\s*[-–]\s*(\d+)$/i.exec(
-    inline(questions.heading).trim(),
-  );
-  if (range && Number(range[1]) !== quiz.questions.length)
-    throw new ImportError(
-      "The Questions heading range does not match the number of questions.",
-      questions.heading.position?.start.line,
+  for (const group of questionGroups) {
+    const range = /^Questions\s+(\d+)\s*[-–—]\s*(\d+)$/i.exec(
+      inline(group.heading).trim(),
     );
+    if (!range) continue;
+    const numbers = group.nodes.flatMap((node) => {
+      const match =
+        node.type === "heading" && node.depth === 3
+          ? /^Question (\d+)$/.exec(inline(node).trim())
+          : null;
+      return match ? [Number(match[1])] : [];
+    });
+    const from = Number(range[1]),
+      to = Number(range[2]);
+    if (
+      numbers[0] !== from ||
+      numbers.at(-1) !== to ||
+      numbers.length !== to - from + 1
+    )
+      throw new ImportError(
+        "The Questions heading range does not match the questions in that section.",
+        group.heading.position?.start.line,
+      );
+  }
   const explained = new Set<number>();
   index = 0;
   while (index < explanations.nodes.length) {
@@ -443,7 +478,7 @@ export function parseQuiz(source: string): Quiz {
         (node) =>
           node.type === "heading" &&
           node.depth === 2 &&
-          /^Questions(?:\s+1\s*[-–]\s*\d+)?$/i.test(inline(node).trim()),
+          paperQuestionsHeading.test(inline(node).trim()),
       )
     )
       return parseMultipleResponsePaper(tree);

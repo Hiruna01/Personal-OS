@@ -55,7 +55,7 @@ test("existing single-answer/written quizzes retain their shape and rich Markdow
   assert.equal(quiz.questions[0].answer, "B");
   assert.match(quiz.questions[1].prompt, /```sql/);
   assert.match(quiz.questions[2].prompt, /\$n\$/);
-  assert.equal(PARSER_VERSION, "campus-quiz-v1.1.0");
+  assert.equal(PARSER_VERSION, "campus-quiz-v1.1.1");
 });
 
 test("separate questions, bold option labels, answer keys, explanations and math", () => {
@@ -179,4 +179,94 @@ test("malformed format and existing mcq/written validation remain strict", () =>
     /exactly one matching/,
   );
   assert.throws(() => parseQuiz(""), /empty/);
+});
+
+const pairedPaper = paper
+  .replace("## Questions 1-2", "## Questions 1-1")
+  .replace("### Question 2\n", "## Questions 2-2\n\n### Question 2\n");
+
+test("numbered question groups import together with hyphen, en-dash and em-dash ranges", () => {
+  assert.deepEqual(parseQuiz(pairedPaper), parseQuiz(paper));
+  for (const separator of ["–", "—"]) {
+    const typographic = pairedPaper
+      .replace("Questions 1-1", `Questions 1${separator}1`)
+      .replace("Questions 2-2", `Questions 2${separator}2`);
+    assert.deepEqual(parseQuiz(typographic), parseQuiz(paper));
+  }
+});
+
+test("thirty questions in fifteen paired groups retain every question, key and explanation", () => {
+  const numbers = Array.from({ length: 30 }, (_, index) => index + 1);
+  const source = `# Grouped exam practice
+
+${numbers
+  .map(
+    (
+      number,
+    ) => `${number % 2 ? `## Questions ${number}-${number + 1}\n\n` : ""}### Question ${number}
+
+Which statements hold for case ${number}?
+
+- **A.** First statement for case ${number}.
+- **B.** Second statement for case ${number}.
+`,
+  )
+  .join("\n")}
+## Quick answer key
+
+| Question | Correct options |
+|---|---|
+${numbers.map((number) => `| ${number} | A, B |`).join("\n")}
+
+## Detailed explanations
+
+${numbers.map((number) => `### Question ${number} - Correct answers: A, B\n\nBoth statements hold for case ${number}.`).join("\n\n")}
+`;
+  const quiz = parseQuiz(source);
+  assert.deepEqual(
+    quiz.questions.map((question) => question.number),
+    numbers,
+  );
+  for (const question of quiz.questions) {
+    assert.deepEqual(question.answer, ["A", "B"]);
+    assert.equal(
+      question.explanation,
+      `Both statements hold for case ${question.number}.`,
+    );
+  }
+});
+
+test("split groups still reject wrong ranges, missing numbers, repeats and inconsistent keys", () => {
+  assert.throws(
+    () => parseQuiz(pairedPaper.replace("Questions 2-2", "Questions 2-3")),
+    /heading range/,
+  );
+  assert.throws(
+    () => parseQuiz(pairedPaper.replace("Questions 2-2", "Questions 1-2")),
+    /heading range/,
+  );
+  assert.throws(
+    () =>
+      parseQuiz(pairedPaper.replace("### Question 2\n", "### Question 3\n")),
+    /Expected ### Question 2/,
+  );
+  assert.throws(
+    () =>
+      parseQuiz(pairedPaper.replace("### Question 2\n", "### Question 1\n")),
+    /Expected ### Question 2/,
+  );
+  assert.throws(
+    () => parseQuiz(pairedPaper.replace("| 2 | A, C, E |", "| 2 | A, B, E |")),
+    /Question 2:.*disagree/,
+  );
+  assert.throws(
+    () =>
+      parseQuiz(
+        pairedPaper.replace(
+          "## Questions 2-2\n\n### Question 2",
+          "## Unrelated material\n\n### Question 2",
+        ),
+      ),
+    /outside its expected section/,
+  );
 });

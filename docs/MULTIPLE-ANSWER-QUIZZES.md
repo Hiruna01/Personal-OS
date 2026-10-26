@@ -17,7 +17,7 @@ These are page-local self-study interactions. There are no timers, aggregate sco
 ## Paper layout
 
 - One `# Title`.
-- `## Questions` or `## Questions 1-N`.
+- `## Questions` or `## Questions 1-N`. You may also split the paper into consecutive groups such as `## Questions 1-2`, `## Questions 3-4`, and so on. Keep question numbers sequential across the entire paper; each section’s declared range must match its contents. Hyphens, en dashes, and em dashes are accepted in ranges.
 - Sequential `### Question 1`, `### Question 2`, etc.; up to 100 questions.
 - Prompt Markdown followed by one unordered option list. Labels run from A. onward, with 2–26 options. Plain `A.` and bold `**A.**` labels are accepted. Code, nested lists, tables, links, and mathematics are preserved within option items.
 - Optional `## Quick answer key`: a table with `Question` / `Correct options` column pairs. Several pairs per row are supported, as in the supplied paper. Every question must appear exactly once, and the key must agree with the detailed answers.
@@ -52,14 +52,20 @@ A, C
 Explain each correct and incorrect choice here.
 ```
 
-The title and `Format: campus-quiz-v1` marker remain required for structured files. Multiple-response derived JSON uses `type: "multiple_response"` and an ordered array of correct labels in `answer`. Existing single-answer and written JSON retains its original shape. Parser version: `campus-quiz-v1.1.0`.
+The title and `Format: campus-quiz-v1` marker remain required for structured files. Multiple-response derived JSON uses `type: "multiple_response"` and an ordered array of correct labels in `answer`. Existing single-answer and written JSON retains its original shape. Parser version: `campus-quiz-v1.1.1`.
 
 Source Markdown, derived JSON, parser version, and revision continue to save atomically through the existing owner-authenticated operation. No database migration or data conversion is needed; existing records remain readable. HTML execution and URL sanitisation rules are unchanged.
 
 ## Verification
 
-`npm run test:quiz` passes eight regression tests covering compatibility, separated and structured formats, bold options, code/math/tables, optional and multi-column keys, mismatches, missing/duplicate content, unknown labels, and invalid ranges. The supplied 30-question file was also parsed directly without modification. TypeScript, formatting, and the final Node 22 production build pass.
+`npm run test:quiz` passes eleven regression tests covering compatibility, separated and structured formats, bold options, code/math/tables, optional and multi-column keys, mismatches, missing/duplicate content, unknown labels, invalid ranges, and complete 30-question papers split into paired groups. The supplied 30-question file was also parsed directly without modification. TypeScript, formatting, and the final Node 22 production build pass.
 
 Browser checks covered importing the supplied paper and template, keyboard checkbox selection, exact/partial/incorrect feedback, reveal without selections, Check becoming Next, previous-question state retention, final-question retry and focus, independent source previews, and disabled preview saving. No browser warnings/errors were recorded in the isolated test tab. The template URL was verified to serve the complete example. No real records were saved. Direct visual inspection of the quiz at mobile width remains a manual check; the narrow-layout navigation wraps its helper text above the buttons.
 
 [Desktop answer/explanation screenshot](screenshots/multiple-answer-desktop.png) uses the synthetic template.
+
+## Grouped-paper import fix — 26 October 2026
+
+The importer now collects every numbered Questions section before joining questions to their answer key and detailed explanations. Previously it read only the first section and reported Question 3 as outside the expected section. The supplied Scope & Cost Management MCQ paper now imports all 30 questions without edits. Range, ordering, duplicate-number, missing-explanation, and answer-key consistency checks remain enforced. Ordinary reference sheets still use the ordinary Markdown upload flow. No stored records, permissions, or database structure changed.
+
+Verified the unchanged original file through the browser file-picker and Review import flow: **30 questions validated · original order preserved**. The preview remained read-only; no records were saved. [Successful import preview](screenshots/grouped-mcq-import.png).
