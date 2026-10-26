@@ -10,7 +10,7 @@ export default function PreviewLayout({
   if (!demoEnabled()) notFound();
   const data = fixtures();
   return (
-    <Shell workspace={data.workspace} semesters={data.semesters} demo>
+    <Shell workspace={data.workspace} demo>
       {children}
     </Shell>
   );

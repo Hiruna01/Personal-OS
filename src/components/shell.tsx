@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth-actions";
-import type { Workspace, Semester } from "@/types/domain";
+import type { Workspace } from "@/types/domain";
 export function Brand() {
   return (
     <span className="brand">
@@ -58,11 +58,9 @@ export function Brand() {
 }
 function Navigation({
   workspace,
-  semesters,
   demo,
 }: {
   workspace: Workspace;
-  semesters: Semester[];
   demo: boolean;
 }) {
   const pathname = usePathname();
@@ -267,12 +265,10 @@ function Navigation({
 export function Shell({
   children,
   workspace,
-  semesters,
   demo = false,
 }: {
   children: React.ReactNode;
   workspace: Workspace;
-  semesters: Semester[];
   demo?: boolean;
 }) {
   const pathname = usePathname();
@@ -294,7 +290,7 @@ export function Shell({
     <SidebarProvider
       style={{ "--sidebar-width": "228px" } as React.CSSProperties}
     >
-      <Navigation workspace={workspace} semesters={semesters} demo={demo} />
+      <Navigation workspace={workspace} demo={demo} />
       <div className="os-main">
         <header className="topbar">
           <div>

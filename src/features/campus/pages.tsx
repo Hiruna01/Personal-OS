@@ -40,7 +40,7 @@ import {
   StudyStatusControl,
 } from "./collections";
 import { ImportDialog } from "@/features/study-content/import-dialog";
-import { QuizReader } from "@/features/study-content/quiz";
+import { QuizPage } from "@/features/study-content/quiz-page";
 import { Markdown } from "@/features/study-content/markdown";
 import { DeleteDocument } from "@/features/study-content/document-actions";
 import type {
@@ -720,6 +720,16 @@ function DocumentPage({ data }: { data: ContextData }) {
     parent = lecture
       ? `${base}${campusPath}/lectures/${lecture.id}`
       : `${base}${campusPath}/modules/${module.id}`;
+  if (document.kind === "quiz" && document.quiz_json) {
+    return (
+      <QuizPage
+        key={`${document.id}-${document.revision}`}
+        document={document}
+        parent={parent}
+        demo={data.demo}
+      />
+    );
+  }
   const crumbs = [
     ...moduleCrumbs(data, module),
     ...(lecture ? [{ label: lecture.title, href: parent }] : []),
@@ -760,9 +770,7 @@ function DocumentPage({ data }: { data: ContextData }) {
           />
         </div>
       </div>
-      <article
-        className={`reading-surface ${document.kind === "quiz" ? "quiz-reading-surface" : ""}`}
-      >
+      <article className="reading-surface">
         <header className="reading-header">
           <div className="eyebrow">
             {document.kind === "quiz"
@@ -786,16 +794,9 @@ function DocumentPage({ data }: { data: ContextData }) {
             </p>
           )}
         </header>
-        {document.kind === "quiz" && document.quiz_json ? (
-          <QuizReader
-            key={`${document.id}-${document.revision}`}
-            quiz={document.quiz_json}
-          />
-        ) : (
-          <div className="document-body">
-            <Markdown source={document.source_markdown} />
-          </div>
-        )}
+        <div className="document-body">
+          <Markdown source={document.source_markdown} />
+        </div>
         <footer className="reading-footer">
           <CheckCircle2 size={14} />
           {document.kind === "quiz"

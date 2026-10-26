@@ -1,14 +1,12 @@
 "use client";
 
-import { useId, useMemo, useRef, useState } from "react";
+import { memo, useId, useMemo, useRef } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   CircleHelp,
   Eye,
   Lightbulb,
@@ -23,19 +21,14 @@ import {
   QuestionnaireChoices,
   QuestionnaireDescription,
   QuestionnaireItem,
-  QuestionnaireNext,
-  QuestionnairePrevious,
-  QuestionnaireProgress,
   QuestionnaireTitle,
 } from "@/components/ui/questionnaire";
 import type { Quiz, QuizQuestion } from "@/types/domain";
 import { Markdown } from "./markdown";
+import { useQuizSession, emptyState, type QuestionState } from "./quiz-session";
 
-type QuestionState = {
-  selected: string[];
-  review: "checked" | "revealed" | null;
-};
-const emptyState: QuestionState = { selected: [], review: null };
+// Selection feedback changes frequently; unchanged rich content need not be parsed again.
+const QuizMarkdown = memo(Markdown);
 
 function Question({
   question: q,
@@ -70,16 +63,14 @@ function Question({
         render={<div />}
         className="quiz-prompt"
       >
-        <Markdown source={q.prompt} />
+        <QuizMarkdown source={q.prompt} />
       </QuestionnaireTitle>
       <QuestionnaireDescription className="quiz-guidance">
         {multiple
-          ? revealed
-            ? "Change a selection to check again, or continue when you’re ready."
-            : "Select all that apply. Check your choices when you’re ready."
+          ? "Select all that apply."
           : q.type === "mcq"
-            ? "Choose an option, or reveal the answer when you’re ready."
-            : "Think through your response, then compare it with the model answer."}
+            ? "Choose one answer."
+            : "Think through your response, then reveal the model answer."}
       </QuestionnaireDescription>
       {q.options && (
         <QuestionnaireChoices className="quiz-options">
@@ -119,7 +110,7 @@ function Question({
               >
                 <div className="quiz-option-body" id={labelId}>
                   <span className="option-label">{option.label}</span>
-                  <Markdown source={option.markdown} />
+                  <QuizMarkdown source={option.markdown} />
                   {status && (
                     <span
                       className={`quiz-choice-result ${wrong ? "is-incorrect" : ""}`}
@@ -142,38 +133,6 @@ function Question({
           })}
         </QuestionnaireChoices>
       )}
-      <div className="quiz-reveal-actions">
-        <Button
-          variant={multiple ? "ghost" : revealed ? "outline" : "default"}
-          size="sm"
-          onClick={() =>
-            onChange({ ...state, review: revealed ? null : "revealed" })
-          }
-          aria-expanded={revealed}
-          aria-controls={`${name}-answer`}
-        >
-          {multiple && !revealed && <Eye data-icon="inline-start" />}
-          {multiple
-            ? revealed
-              ? "Hide answers"
-              : "Reveal answers"
-            : revealed
-              ? "Hide answer"
-              : "Show answer"}
-          {revealed ? (
-            <ChevronUp data-icon="inline-end" />
-          ) : (
-            !multiple && <ChevronDown data-icon="inline-end" />
-          )}
-        </Button>
-        <span>
-          {multiple
-            ? "For self-study"
-            : q.type === "mcq"
-              ? "Selection is optional"
-              : "Written · self-check"}
-        </span>
-      </div>
       <AnimatePresence initial={false}>
         {revealed && (
           <motion.div
@@ -198,7 +157,9 @@ function Question({
               ) {
                 const panel = answerPanel.current;
                 panel?.focus({ preventScroll: true });
-                const previewScrollArea = panel?.closest(".import-body");
+                const previewScrollArea = panel?.closest(
+                  ".import-body, .quiz-focus-scroll",
+                );
                 if (panel && previewScrollArea) {
                   previewScrollArea.scrollBy({
                     top:
@@ -249,19 +210,15 @@ function Question({
                     ? `Correct answer · ${q.answer}`
                     : "Model answer"}
               </h2>
-              {multiple ? (
+              {multiple && checked ? (
                 <p className="quiz-answer-summary">
-                  {checked
-                    ? `Your selection: ${q.options
-                        .filter((option) =>
-                          state.selected.includes(option.label),
-                        )
-                        .map((option) => option.label)
-                        .join(", ")}.`
-                    : "Answers revealed for self-study. Read the reasoning for each option below."}
+                  {`Your selection: ${q.options
+                    .filter((option) => state.selected.includes(option.label))
+                    .map((option) => option.label)
+                    .join(", ")}.`}
                 </p>
-              ) : (
-                <Markdown
+              ) : !multiple ? (
+                <QuizMarkdown
                   source={
                     q.type === "mcq"
                       ? (q.options.find((option) => option.label === q.answer)
@@ -269,10 +226,10 @@ function Question({
                       : q.answer
                   }
                 />
-              )}
+              ) : null}
               <div className="explanation">
                 <h3>Explanation</h3>
-                <Markdown source={q.explanation} />
+                <QuizMarkdown source={q.explanation} />
               </div>
             </section>
           </motion.div>
@@ -282,37 +239,55 @@ function Question({
   );
 }
 
-export function QuizReader({ quiz }: { quiz: Quiz }) {
+export function QuizReader({
+  quiz,
+  session,
+}: {
+  quiz: Quiz;
+  session?: ReturnType<typeof useQuizSession>;
+}) {
+  const localSession = useQuizSession();
+  const { index, setIndex, states, update } = session ?? localSession;
   const instanceId = useId();
+  const question = quiz.questions[index];
+  const active = `${instanceId}-question-${question?.number ?? 0}`;
   const items = useMemo(
     () =>
-      quiz.questions.map((question) => ({
-        name: `${instanceId}-question-${question.number}`,
-        required: false,
-        multiple: question.type === "multiple_response",
-        choices: question.options?.map((option) => ({ value: option.label })),
-      })),
-    [instanceId, quiz.questions],
+      question
+        ? [
+            {
+              name: active,
+              required: false,
+              multiple: question.type === "multiple_response",
+              choices: question.options?.map((option) => ({
+                value: option.label,
+              })),
+            },
+          ]
+        : [],
+    [active, question],
   );
-  const [active, setActive] = useState(items[0]?.name ?? "");
-  const [states, setStates] = useState<Record<number, QuestionState>>({});
-  const index = Math.max(
-    0,
-    items.findIndex((item) => item.name === active),
-  );
-  const question = quiz.questions[index];
   if (!question) return null;
   const state = states[question.number] ?? emptyState;
   const multiple = question.type === "multiple_response";
-  const hasNext = index < items.length - 1;
-  function update(number: number, value: QuestionState) {
-    setStates((previous) => ({ ...previous, [number]: value }));
+  const hasNext = index < quiz.questions.length - 1;
+  function goTo(next: number) {
+    if (next < 0 || next >= quiz.questions.length) return;
+    setIndex(next);
+    requestAnimationFrame(() => {
+      const field = document
+        .getElementById(
+          `${instanceId}-question-${quiz.questions[next].number}-prompt`,
+        )
+        ?.closest("fieldset");
+      field?.focus({ preventScroll: true });
+      field?.scrollIntoView({ block: "start", behavior: "instant" });
+    });
   }
   return (
     <Questionnaire
       items={items}
       item={active}
-      onItemChange={setActive}
       className="quiz-reader"
       aria-label={`${quiz.title} self-study questions`}
       onSubmitCapture={(event) => {
@@ -322,7 +297,22 @@ export function QuizReader({ quiz }: { quiz: Quiz }) {
       onKeyDownCapture={(event) => {
         // Preserve Markdown keyboard interactions and keep survey shortcuts from skipping checks.
         const target = event.target as HTMLElement;
-        if (target.closest(".markdown")) event.stopPropagation();
+        if (target.closest(".markdown")) {
+          event.stopPropagation();
+          return;
+        }
+        // The questionnaire contains only the mounted question. Page navigation
+        // stays outside its collection; radio arrow keys keep their native use.
+        if (
+          (event.key === "ArrowLeft" || event.key === "ArrowRight") &&
+          !(target instanceof HTMLInputElement && target.type === "radio")
+        ) {
+          event.stopPropagation();
+          event.preventDefault();
+          if (event.repeat) return;
+          if (event.key === "ArrowLeft") goTo(index - 1);
+          else if (!multiple || state.review) goTo(index + 1);
+        }
         if (
           event.key === "Enter" &&
           (event.metaKey ||
@@ -336,97 +326,103 @@ export function QuizReader({ quiz }: { quiz: Quiz }) {
       }}
     >
       <div className="quiz-position">
-        <QuestionnaireProgress aria-label="Question position" />
-        <span>
-          {multiple
-            ? "Multiple answers"
-            : question.type === "mcq"
-              ? "Multiple choice"
-              : "Written question"}
-        </span>
+        <div
+          data-slot="questionnaire-progress"
+          role="progressbar"
+          aria-label="Question position"
+          aria-valuemin={1}
+          aria-valuemax={quiz.questions.length}
+          aria-valuenow={index + 1}
+          aria-valuetext={`Question ${index + 1} of ${quiz.questions.length}`}
+          aria-live="polite"
+        >
+          Question {index + 1} of {quiz.questions.length}
+        </div>
       </div>
-      <div className="quiz-position-track" aria-hidden="true">
-        <span style={{ width: `${((index + 1) / items.length) * 100}%` }} />
-      </div>
-      {quiz.questions.map((entry, itemIndex) => (
-        <Question
-          key={entry.number}
-          name={items[itemIndex].name}
-          question={entry}
-          state={states[entry.number] ?? emptyState}
-          onChange={(value) => update(entry.number, value)}
-        />
-      ))}
-      {(multiple || items.length > 1) && (
-        <QuestionnaireActions className="quiz-navigation">
-          <QuestionnairePrevious size="sm">
+      <Question
+        key={question.number}
+        name={active}
+        question={question}
+        state={state}
+        onChange={(value) => update(question.number, value)}
+      />
+      <QuestionnaireActions className="quiz-navigation">
+        {quiz.questions.length > 1 && (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={index === 0}
+            aria-label="Previous question"
+            onClick={() => goTo(index - 1)}
+            className="quiz-previous"
+          >
             <ArrowLeft data-icon="inline-start" />
-            Previous
-          </QuestionnairePrevious>
-          <span className="quiz-navigation-note">
-            {multiple
-              ? state.review
-                ? hasNext
-                  ? "Continue when you’re ready"
-                  : "Last question"
-                : state.selected.length
-                  ? `${state.selected.length} selected`
-                  : "Select answers to check"
-              : !hasNext
-                ? "Last question"
-                : "Move at your own pace"}
-          </span>
-          {multiple ? (
+            <span>Previous</span>
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="quiz-reveal"
+          onClick={() =>
+            update(question.number, {
+              ...state,
+              review: state.review ? null : "revealed",
+            })
+          }
+          aria-expanded={state.review !== null}
+          aria-controls={state.review ? `${active}-answer` : undefined}
+        >
+          <Eye data-icon="inline-start" />
+          {state.review
+            ? multiple
+              ? "Hide answers"
+              : "Hide answer"
+            : multiple
+              ? "Reveal answers"
+              : "Reveal answer"}
+        </Button>
+        {multiple ? (
+          <Button
+            size="sm"
+            className="quiz-check-next"
+            disabled={!state.review && !state.selected.length}
+            aria-controls={state.review ? undefined : `${active}-answer`}
+            onClick={() => {
+              if (!state.review)
+                update(question.number, { ...state, review: "checked" });
+              else if (hasNext) goTo(index + 1);
+              else {
+                update(question.number, emptyState);
+                goTo(index);
+              }
+            }}
+          >
+            {state.review ? (hasNext ? "Next" : "Try again") : "Check answers"}
+            {state.review ? (
+              hasNext ? (
+                <ArrowRight data-icon="inline-end" />
+              ) : (
+                <RotateCcw data-icon="inline-end" />
+              )
+            ) : (
+              <Check data-icon="inline-end" />
+            )}
+          </Button>
+        ) : (
+          quiz.questions.length > 1 && (
             <Button
               size="sm"
               className="quiz-check-next"
-              disabled={!state.review && !state.selected.length}
-              aria-controls={state.review ? undefined : `${active}-answer`}
-              onClick={() => {
-                if (!state.review)
-                  update(question.number, { ...state, review: "checked" });
-                else if (hasNext) setActive(items[index + 1].name);
-                else {
-                  update(question.number, emptyState);
-                  requestAnimationFrame(() => {
-                    document
-                      .getElementById(`${active}-prompt`)
-                      ?.closest("fieldset")
-                      ?.focus();
-                  });
-                }
-              }}
-            >
-              {state.review
-                ? hasNext
-                  ? "Next"
-                  : "Try again"
-                : "Check answers"}
-              {state.review ? (
-                hasNext ? (
-                  <ArrowRight data-icon="inline-end" />
-                ) : (
-                  <RotateCcw data-icon="inline-end" />
-                )
-              ) : (
-                <Check data-icon="inline-end" />
-              )}
-            </Button>
-          ) : (
-            <QuestionnaireNext
-              variant="outline"
-              size="sm"
-              onClick={(event) => {
-                event.preventDefault();
-                if (hasNext) setActive(items[index + 1].name);
-              }}
+              disabled={!hasNext}
+              onClick={() => goTo(index + 1)}
             >
               Next
               <ArrowRight data-icon="inline-end" />
-            </QuestionnaireNext>
-          )}
-        </QuestionnaireActions>
-      )}
+            </Button>
+          )
+        )}
+      </QuestionnaireActions>
     </Questionnaire>
   );
 }

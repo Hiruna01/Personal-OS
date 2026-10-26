@@ -6,6 +6,8 @@ import remarkStringify from "remark-stringify";
 import { visit } from "unist-util-visit";
 import type { Root, RootContent, List, ListItem, Text, Paragraph } from "mdast";
 import type { Quiz, QuizOption } from "@/types/domain";
+import { safeUrl } from "./urls.mjs";
+export { safeUrl } from "./urls.mjs";
 export const PARSER_VERSION = "campus-quiz-v1.1.1";
 export const MAX_MARKDOWN_BYTES = 1048576;
 const processor = unified()
@@ -39,21 +41,6 @@ export function normalizeSource(source: string) {
       "This file contains binary content. Choose a UTF-8 Markdown file.",
     );
   return normalized;
-}
-export function safeUrl(value: string, image = false): string | undefined {
-  if (!image && value.startsWith("#")) return value;
-  try {
-    const url = new URL(value);
-    return (image
-      ? url.protocol === "https:"
-      : ["https:", "http:", "mailto:"].includes(url.protocol)) &&
-      !url.username &&
-      !url.password
-      ? url.href
-      : undefined;
-  } catch {
-    return undefined;
-  }
 }
 export function inspectMarkdown(source: string) {
   const tree = processor.parse(normalizeSource(source));

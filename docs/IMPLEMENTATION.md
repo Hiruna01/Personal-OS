@@ -27,6 +27,8 @@ Home derives its current modules and continuation links from the selected curren
 
 ## Environment and verification
 
+The page-specific data-loading and deferred editor boundaries are described in [performance improvements](PERFORMANCE.md). The shell no longer requests unused semester records, and quizzes render only their active question while preserving page-local state.
+
 The provided environment has Node and npm, but no Supabase credentials, Supabase CLI, or Docker runtime. A real hosted/local database was therefore not provisioned or exercised during implementation. Migrations, local configuration, owner provisioning, and synthetic seed data are supplied.
 
 The user will perform manual functional testing. No automated functional test suite was added or run. Compilation/build checks and visual review are documented separately in the completion report. Hosted Auth/RLS/storage and end-to-end persistence require the Supabase setup in README.md and the manual checks in docs/MANUAL-VERIFICATION.md.

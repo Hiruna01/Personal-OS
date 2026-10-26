@@ -67,6 +67,8 @@ This milestone does not include sharing, marks/GPA, schedules, full projects, re
 
 ```sh
 npm run typecheck
+npm run test:quiz
+npm run test:performance
 npm run build
 npm start
 ```
@@ -76,6 +78,8 @@ The lockfile pins the installed dependency tree. The official shadcn components 
 The interface now uses a neutral Vercel-inspired visual system, restrained Motion for React transitions, and the supplied React Bits folder collection. See [redesign and verification notes](docs/REDESIGN.md) for screenshots and the component adaptations.
 
 Functional testing is manual at the owner’s request. See [manual verification](docs/MANUAL-VERIFICATION.md), [implementation decisions](docs/IMPLEMENTATION.md), and [completion report](docs/COMPLETION.md). No hosted credentials, Supabase CLI, or Docker were supplied during implementation; live Auth, RLS, migrations, storage, and database persistence still need to be exercised in your configured environment.
+
+Pages load only the data they display, quizzes render the active question, and editing tools load when opened. See [performance improvements](docs/PERFORMANCE.md) for verification, optional server timings, and hosting-region checks.
 
 ## Vercel
 

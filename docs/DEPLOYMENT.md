@@ -45,23 +45,23 @@ Push the project into your GitHub repository, including `package-lock.json`, `ve
 
 In [Vercel](https://vercel.com/new), import that repository and select:
 
-| Setting | Value |
-| --- | --- |
-| Framework | Next.js |
-| Root directory | The folder containing this app's `package.json` (`./` if it is the repository root) |
-| Node.js | 22.x (also pinned in `package.json`) |
-| Install command | `npm ci` |
-| Build command | `npm run build` |
-| Output directory | Leave the Next.js default; do not select a static export |
+| Setting          | Value                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| Framework        | Next.js                                                                             |
+| Root directory   | The folder containing this app's `package.json` (`./` if it is the repository root) |
+| Node.js          | 22.x (also pinned in `package.json`)                                                |
+| Install command  | `npm ci`                                                                            |
+| Build command    | `npm run build`                                                                     |
+| Output directory | Leave the Next.js default; do not select a static export                            |
 
 Add these **Production** environment variables before deploying:
 
-| Name | Value |
-| --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | The project URL from step 1 |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | The publishable/anon key from step 1 |
-| `APP_URL` | Your canonical HTTPS website origin, without a trailing slash |
-| `ENABLE_DEMO` | `false` |
+| Name                                   | Value                                                         |
+| -------------------------------------- | ------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | The project URL from step 1                                   |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | The publishable/anon key from step 1                          |
+| `APP_URL`                              | Your canonical HTTPS website origin, without a trailing slash |
+| `ENABLE_DEMO`                          | `false`                                                       |
 
 If you do not know the final Vercel domain yet, leave `APP_URL` unset for the first deploy. After Vercel assigns the project domain, set `APP_URL` to that exact origin and redeploy before using password recovery. Do not use a deployment-specific URL as your permanent origin if a stable project domain is available.
 
@@ -90,7 +90,12 @@ In **Authentication → Email Templates → Reset Password**, use this recovery 
 
 ```html
 <h2>Reset your Personal OS password</h2>
-<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery">Reset password</a></p>
+<p>
+  <a
+    href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery"
+    >Reset password</a
+  >
+</p>
 ```
 
 This matches the implemented token-hash recovery route and supports opening the email in another browser. The standard PKCE `/auth/callback` route is also supported.
@@ -110,6 +115,8 @@ Configure **custom SMTP** in Supabase for dependable production recovery deliver
 Keep the existing manual verification guide for the complete Phase 0–3 review. No live Supabase checks can be claimed until these steps run against the configured project.
 
 ## Troubleshooting
+
+For slow page loads, see [performance improvements and measurement](PERFORMANCE.md). Verify that the Vercel function region is close to the Supabase database region; this is a deployed project setting and is not inferred from repository configuration. Optional `PERFORMANCE_LOGGING=true` enables content-free server timing logs.
 
 - **“Connect your workspace” in production:** set both `NEXT_PUBLIC_SUPABASE_*` variables in Production and redeploy.
 - **Owner has no workspace:** apply the migration and run provisioning for the same project/email. Creating an Auth user alone does not create its workspace.

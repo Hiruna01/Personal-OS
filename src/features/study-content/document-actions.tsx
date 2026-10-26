@@ -1,5 +1,5 @@
 "use client";
-import { useTransition, useState } from "react";
+import { useEffect, useTransition, useState, type ComponentProps } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -20,16 +20,34 @@ export function DeleteDocument({
   revision,
   parent,
   demo,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
+  onCloseAutoFocus,
 }: {
   id: string;
   revision: number;
   parent: string;
   demo: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+  onCloseAutoFocus?: ComponentProps<
+    typeof AlertDialogContent
+  >["onCloseAutoFocus"];
 }) {
   const [pending, start] = useTransition(),
-    [open, setOpen] = useState(false),
+    [localOpen, setLocalOpen] = useState(false),
     [error, setError] = useState("");
   const router = useRouter();
+  const open = controlledOpen ?? localOpen;
+  useEffect(() => {
+    if (open) setError("");
+  }, [open]);
+  function setOpen(value: boolean) {
+    setLocalOpen(value);
+    onOpenChange?.(value);
+  }
   return (
     <AlertDialog
       open={open}
@@ -40,17 +58,19 @@ export function DeleteDocument({
         }
       }}
     >
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          disabled={demo}
-          aria-label="Delete document"
-        >
-          <Trash2 size={16} />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
+      {!hideTrigger && (
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            disabled={demo}
+            aria-label="Delete document"
+          >
+            <Trash2 size={16} />
+          </Button>
+        </AlertDialogTrigger>
+      )}
+      <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete this document?</AlertDialogTitle>
           <AlertDialogDescription>

@@ -8,6 +8,7 @@
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
     "test:quiz": "node --experimental-strip-types --test scripts/quiz-parser.test.mjs",
+    "test:performance": "node --experimental-strip-types --test scripts/data-loading.test.mjs scripts/quiz-rendering.test.mjs",
     "provision": "node --env-file=.env.local scripts/provision-owner.mjs",
     "format": "prettier --write src scripts next.config.ts",
     "seed:generate": "node --experimental-strip-types scripts/generate-seed.mjs"

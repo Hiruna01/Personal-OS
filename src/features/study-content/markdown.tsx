@@ -3,7 +3,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeKatex from "rehype-katex";
-import { safeUrl } from "@/lib/markdown/parser";
+import { safeUrl } from "@/lib/markdown/urls.mjs";
 const schema = {
   ...defaultSchema,
   attributes: {

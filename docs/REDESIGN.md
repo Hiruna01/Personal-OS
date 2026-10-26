@@ -92,6 +92,14 @@ Authentication, server actions, permissions, stored data, and preview restrictio
 
 This work changes presentation and local interactions. Database schema, owner provisioning, authenticated server actions, RLS, storage permissions, parser semantics, and the production preview guard are preserved. No real records were mutated. Live Supabase Auth/recovery/storage/persistence still require the environment setup described in README.md; credentials were unavailable here.
 
+### Quiz focus layout — 26 October 2026
+
+- Quiz pages now use a compact Back link, title, Focus mode button, and options menu. The menu contains revision information, source editing, and the existing deletion confirmation. Long breadcrumbs, the self-study heading, introductory copy, and the progress line are removed from quiz reading pages.
+- Focus mode fills the app viewport using the shared modal dialog, with an Exit focus control, Escape dismissal, keyboard focus containment, and focus return. The shared page-local session preserves the current question, selections, and revealed/checked answers across mode changes. Import previews keep separate state and unique IDs.
+- Previous, Reveal answers, and Check answers/Next share a sticky action bar with mobile safe-area spacing. On narrow screens, Previous uses a labelled arrow button and secondary icons are omitted to keep all actions on one row. Questions and explanations scroll naturally; text is never truncated to fit the viewport.
+- Mobile quizzes have no enclosing card border or extra inner padding. Questions retain rich Markdown and options use 15px text. Existing answer feedback, optional single-answer selections, multiple-answer checks, Previous state, and final-question retry are preserved. No parser, persistence, authentication, or database changes are included.
+- Node 22 type checking and the production build passed. Browser, mobile-device, and functional verification are left to the owner at their request; no live records were changed.
+
 ## Screenshots
 
 All content shown is synthetic.

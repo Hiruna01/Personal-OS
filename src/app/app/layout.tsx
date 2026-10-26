@@ -6,16 +6,6 @@ export default async function OwnerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { db, workspace } = await requireOwner();
-  const { data: semesters } = await db
-    .from("semesters")
-    .select("*")
-    .eq("workspace_id", workspace.id)
-    .order("starts_on", { ascending: false })
-    .limit(20);
-  return (
-    <Shell workspace={workspace} semesters={semesters ?? []}>
-      {children}
-    </Shell>
-  );
+  const { workspace } = await requireOwner();
+  return <Shell workspace={workspace}>{children}</Shell>;
 }
