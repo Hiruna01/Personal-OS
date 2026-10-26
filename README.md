@@ -1,5 +1,7 @@
 # Personal OS — Private Study Hub
 
+![Personal OS — Private study workspace: Semesters, Modules, Lectures, and Quizzes](docs/assets/personal-os-cover.png)
+
 A complete Phase 0–3 implementation using Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui, and Supabase. Original lecture documents stay externally hosted; Markdown content is stored in Postgres and optional thumbnails in private Storage.
 
 ## Start locally
